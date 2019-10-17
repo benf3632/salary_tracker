@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'database_helper.dart';
 
 void main() => runApp(MyApp());
 
@@ -22,29 +24,54 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   
     
   bool _started = false;
   String _income = "0";
+  List<String> months = ["January", "Fabuary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  int selectedMonth = 0;
+  int currentShift;
 
   @override
   void initState() {
-      // Calc income and set it
-      // pull local config
-      // pull shift from database
-      print("start");
      super.initState();
+      WidgetsBinding.instance.addObserver(this);
+      _read();
+      // Calc income and set it
+      // pull shift from database
+  }
+  
+  void _read() async {
+    final prefs = await SharedPreferences.getInstance();
+    _started = prefs.getBool('StartedShift') ?? false;
+    setState(() {_started = _started;});
   }
 
   @override
   void dispose() {
-      // save local config
-      print('stop');
+      WidgetsBinding.instance.removeObserver(this);
       super.dispose();
   }
-  List<String> months = ["January", "Fabuary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  String selctedMonth = "";
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+      switch (state) {
+          case AppLifecycleState.inactive:
+          case AppLifecycleState.paused:
+          case AppLifecycleState.suspending:
+              _save();
+              break;
+          case AppLifecycleState.resumed:
+              break;
+      }
+  }
+  
+  void _save() async {
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setBool('StartedShift', _started);
+  }
+  
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -63,7 +90,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             onNotification: (scrollNotification) {
                                 if (scrollNotification is ScrollEndNotification) {
                                     int i = (scrollNotification.metrics.pixels / width).round();
-                                    setState(() {selctedMonth = months[i];});
+                                    setState(() {selctedMonth = i;});
                                 }
                                 return true;
                             },
@@ -86,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: Container(
                         height: 50,
                         width: width,
-                        child: Center(child: Text(selctedMonth)),
+                        child: Center(child: Text(months[selectedMonth])),
                         color: Colors.white,
                     )
                 ),
@@ -125,13 +152,13 @@ class _MyHomePageState extends State<MyHomePage> {
   void _startShift() async{
       bool didAuth = await _auth();
       if (didAuth) {
-          if (!_started) {
-            print("Shift Started\n");
+          if (_started) {
+
           } else {
-            print("Shift Stopped\n");
+              
           }
           setState(() {_started = !_started;});
-          
+
       }
   }
 
@@ -140,8 +167,7 @@ class _MyHomePageState extends State<MyHomePage> {
     bool didAuth = false;
     try {
         didAuth = await localAuth.authenticateWithBiometrics(
-            localizedReason: 'To Start your shift autherize',
-            stickyAuth: true,
+            localizedReason: _started ? 'To Stop your Shift' : 'To Start your shift',
         );
     } catch (e) {
 
