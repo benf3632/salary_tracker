@@ -40,6 +40,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void initState() {
      super.initState();
       WidgetsBinding.instance.addObserver(this);
+      selectedMonth = DateTime.now().month - 1;
+      salaryPerHour = 0;
+      _getIncome();
       _read();
       // Calc income and set it
       // pull shift from database
@@ -112,13 +115,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                         ),
                     ) 
                 ),
-                Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20.0),
-                    child: Container(
-                        height: 50,
-                        width: width,
-                        child: Center(child: Text(months[selectedMonth])),
-                        color: Colors.white,
+                Expanded(
+                    child: FutureBuilder(
+                        future: _getShifts(),
+                        builder: _buildShiftsList,
                     )
                 ),
                 Expanded(
@@ -152,6 +152,61 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         ) 
     );
 }
+    Future<List<Shift>> _getShifts() async {
+        DatabaseHelper helper = DatabaseHelper.instance;
+        List<Shift> shifts = await helper.queryShiftsByMonthAndYear(selectedMonth + 1, currentYear);
+        return shifts;
+    }
+
+    Widget _buildShiftsList(BuildContext context, AsyncSnapshot snapshot) {
+        List<Shift> shifts = snapshot.data ?? [];
+        return ListView.builder(
+            itemCount: shifts.length,
+            itemBuilder: (BuildContext context, int index) {
+                Shift shift = shifts[index];
+                if (shift.endTime == 0) {
+                    var date = DateTime.parse(shift.date);
+                    var startTime = DateTime.fromMicrosecondsSinceEpoch(shift.startTime);
+                    return Container(
+                        height: 50.0,
+                        color: Colors.white,
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget> [
+                                Text(date.day.toString()),
+                                Text('${startTime.hour.toString()}:${startTime.minute.toString()}'),
+                                Text('Shift On Progress'),
+                            ]
+                        ),
+                    );
+                } else {
+                    var date = DateTime.parse(shift.date);
+                    var startTime = DateTime.fromMicrosecondsSinceEpoch(shift.startTime);
+                    var endTime = DateTime.fromMicrosecondsSinceEpoch(shift.endTime);
+                    return Container(
+                        height: 50.0,
+                        color: Colors.white,
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget> [
+                                Text(date.day.toString()),
+                                Text('${startTime.hour.toString()}:${startTime.minute.toString()}'),
+                                Text('${endTime.hour.toString()}:${endTime.minute.toString()}'),
+                                Text(shift.income.toStringAsFixed(2)),
+                            ]
+                        ),
+                    );
+                }
+            }
+        );
+    }
+
+   void _getIncome() async {
+        DatabaseHelper helper = DatabaseHelper.instance;
+        double income = await helper.getAllIncomeByDate(selectedMonth + 1, currentYear);
+        setState(() {_income = income.toStringAsFixed(2);});
+
+    }
 
   void _startShift() async{
       bool didAuth = await _auth();
@@ -162,18 +217,19 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               Shift shift = await helper.queryShift(currentShiftId);
               shift.endTime = time.microsecondsSinceEpoch;
               shift.id = currentShiftId;
-              var hoursWorked = (shift.startTime - shift.endTime) / 1000000;
+              var hoursWorked = (shift.endTime - shift.startTime) / 1000000;
               hoursWorked = hoursWorked / 3600;
               var income = hoursWorked * salaryPerHour;
               shift.income = income;
-
+              helper.update(shift);
           } else {
              DateTime time = DateTime.now();
              Shift shift = Shift(time.microsecondsSinceEpoch,0,time.toString(),0);
              int id = await helper.insert(shift);
              currentShiftId = id;
           }
-          setState(() {_started = !_started;});
+          await _getIncome();
+          setState(() {_started = !_started; });
 
       }
   }
@@ -205,6 +261,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                 child: Text('CLEAR!'),
                                 onPressed: () {
                                     helper.clear();
+                                    setState(() {_started = false;});
                                     Navigator.of(context).pop();
                                 }
                             ),
@@ -245,7 +302,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         );
     }
     
-    void _setSalaryPerHourDialog() async {
+    Future<Null> _setSalaryPerHourDialog() async {
         var salaryTFController = TextEditingController();
         showDialog(
             context: context,

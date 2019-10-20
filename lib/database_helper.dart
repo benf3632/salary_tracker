@@ -121,5 +121,14 @@ class DatabaseHelper {
         );
     }
 
+    Future<double> getAllIncomeByDate(int month, int year) async {
+        double income = 0;
+        List<Shift> shifts = await queryShiftsByMonthAndYear(month, year);
+        for (Shift shift in shifts) {
+            income += shift.income;
+        }
+        return income;
+    }
+
 
 }
