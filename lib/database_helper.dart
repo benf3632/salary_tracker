@@ -13,12 +13,12 @@ final String tableShifts = 'shifts';
 class Shift {
 
     int id;
-    int startTime;
-    int endTime;
-    var date;
-    double income;
+    var startTime;
+    var endTime;
+    String date;
+    var income;
     
-    Shift();
+    Shift(this.startTime, this.endTime, this.date, this.income);
 
     Shift.fromMap(Map<String, dynamic> map) {
         id = map[coulmnId];
@@ -70,7 +70,7 @@ class DatabaseHelper {
                    $coulmnStartTime INTEGER NOT NULL,
                    $coulmnEndTime INTEGER,
                    $coulmnIncome INTEGER,
-                   $coulmnDate TEXT NOT NULL,
+                   $coulmnDate TEXT NOT NULL
                 )
                 ''');
     }
@@ -95,16 +95,30 @@ class DatabaseHelper {
     Future<List<Shift>> queryShiftsByMonthAndYear(int month, int year) async {
         Database db = await database;
         List<Shift> shifts = [];
+        String queryDate = month.toString().padLeft(2,'0') + year.toString();
         List<Map> maps = await db.query(tableShifts,
             columns: [coulmnId, coulmnStartTime, coulmnEndTime, coulmnIncome, coulmnDate],
-            where: 'strftime(\'%m%y\', $coulmnDate) = \'??\'',
-            whereArgs: [month.toString().padLeft(2, '0'), year],
+            where: 'strftime(\'%m%Y\', $coulmnDate) = ?',
+            whereArgs: [queryDate],
 
         );
         for(Map map in maps) {
             shifts.add(Shift.fromMap(map));
         }
         return shifts;
+    }
+
+    void clear() async {
+        Database db = await database;
+        await db.rawDelete('DELETE FROM $tableShifts');
+    }
+
+    void update(Shift shift) async {
+        Database db = await database;
+        await db.update(tableShifts, shift.toMap(),
+            where: '$coulmnId = ?',
+            whereArgs: [shift.id],
+        );
     }
 
 

@@ -3,6 +3,7 @@ import 'package:local_auth/local_auth.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'database_helper.dart';
+import 'dart:core';
 
 void main() => runApp(MyApp());
 
@@ -29,9 +30,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     
   bool _started = false;
   String _income = "0";
-  List<String> months = ["January", "Fabuary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  final List<String> months = ["January", "Fabuary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   int selectedMonth = 0;
-  int currentShift;
+  int currentShiftId;
+  int currentYear = 2019;
+  double salaryPerHour;
 
   @override
   void initState() {
@@ -82,6 +85,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             centerTitle: true,
             backgroundColor: Colors.black,
         ),
+        drawer: _buildDrawer(context),
         body: Column(
             children: <Widget> [
                 Container(
@@ -90,7 +94,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             onNotification: (scrollNotification) {
                                 if (scrollNotification is ScrollEndNotification) {
                                     int i = (scrollNotification.metrics.pixels / width).round();
-                                    setState(() {selctedMonth = i;});
+                                    setState(() {selectedMonth = i;});
                                 }
                                 return true;
                             },
@@ -152,10 +156,22 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void _startShift() async{
       bool didAuth = await _auth();
       if (didAuth) {
+          DatabaseHelper helper = DatabaseHelper.instance;
           if (_started) {
+              DateTime time = DateTime.now();
+              Shift shift = await helper.queryShift(currentShiftId);
+              shift.endTime = time.microsecondsSinceEpoch;
+              shift.id = currentShiftId;
+              var hoursWorked = (shift.startTime - shift.endTime) / 1000000;
+              hoursWorked = hoursWorked / 3600;
+              var income = hoursWorked * salaryPerHour;
+              shift.income = income;
 
           } else {
-              
+             DateTime time = DateTime.now();
+             Shift shift = Shift(time.microsecondsSinceEpoch,0,time.toString(),0);
+             int id = await helper.insert(shift);
+             currentShiftId = id;
           }
           setState(() {_started = !_started;});
 
@@ -175,4 +191,87 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     
     return didAuth;
   }
+  
+    void _clearDB() async {
+        DatabaseHelper helper = DatabaseHelper.instance;
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+                return AlertDialog(
+                        title: Text('Confirmation'),
+                        content: Text('Are you sure you want to delete your shift?'),
+                        actions: <Widget>[
+                            FlatButton(
+                                child: Text('CLEAR!'),
+                                onPressed: () {
+                                    helper.clear();
+                                    Navigator.of(context).pop();
+                                }
+                            ),
+                            FlatButton(
+                                child: Text('CANCEL'),
+                                onPressed: () {
+                                    Navigator.of(context).pop();
+                                }
+                            ),
+                        ],
+                );
+            }
+        );
+    }
+
+    Widget _buildDrawer(BuildContext context) {
+        return Drawer(
+            child: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                    DrawerHeader(
+                        child: Text('Menu'),
+                        decoration: BoxDecoration(
+                            color: Colors.blue,
+                        ),
+                        
+                    ),
+                    ListTile(
+                        title: Text('Set salary per hour'),
+                        onTap: _setSalaryPerHourDialog,
+                    ),
+                    ListTile(
+                        title: Text('Clear all shifts'),
+                        onTap: _clearDB,
+                    )
+                ]
+            )
+        );
+    }
+    
+    void _setSalaryPerHourDialog() async {
+        var salaryTFController = TextEditingController();
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+                return AlertDialog(
+                    title: Text('Set your salary per hour'),
+                    content: TextField(
+                            controller: salaryTFController,
+                            autofocus: true,
+                    ),
+                    actions: <Widget>[
+                        FlatButton(
+                            child: Text('Done'),
+                            onPressed: () {
+                                var temp = double.tryParse(salaryTFController.text);
+                                if (temp != null) {
+                                    salaryPerHour = temp;
+                                    Navigator.of(context).pop();
+                                } else {
+                                    salaryTFController.text = 'Only numbers';
+                                }
+                            }
+                        )
+                    ]
+                );
+            }
+        );
+    }
 }
