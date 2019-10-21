@@ -32,25 +32,29 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   String _income = "0";
   final List<String> months = ["January", "Fabuary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   int selectedMonth = 0;
-  int currentShiftId;
+  int currentShiftId = -1;
   int currentYear = 2019;
-  double salaryPerHour;
+  double salaryPerHour = 0.0;
+
+  ScrollController _controller;
 
   @override
   void initState() {
      super.initState();
       WidgetsBinding.instance.addObserver(this);
+      _controller = ScrollController();
       selectedMonth = DateTime.now().month - 1;
-      salaryPerHour = 0;
       _getIncome();
       _read();
-      // Calc income and set it
-      // pull shift from database
+      WidgetsBinding.instance.addPostFrameCallback((_) {double width = MediaQuery.of(context).size.width; _controller.jumpTo(width * selectedMonth);});
   }
   
   void _read() async {
     final prefs = await SharedPreferences.getInstance();
     _started = prefs.getBool('StartedShift') ?? false;
+    currentShiftId = prefs.getInt('currentShiftId') ?? -1;
+    currentYear = prefs.getInt('CurrentYear') ?? 2019;
+    salaryPerHour = prefs.getDouble('SalaryPerHour') ?? 0;
     setState(() {_started = _started;});
   }
 
@@ -76,6 +80,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void _save() async {
       final prefs = await SharedPreferences.getInstance();
       prefs.setBool('StartedShift', _started);
+      prefs.setInt('currentShiftId', currentShiftId);
+      prefs.setDouble('SalaryPerHour', salaryPerHour);
+      prefs.setInt('CurrentYear', currentYear);
   }
   
   @override
@@ -102,6 +109,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                 return true;
                             },
                         child: ListView.builder(
+                            controller: _controller,
                             physics: PageScrollPhysics(),
                             scrollDirection: Axis.horizontal,
                             itemCount: months.length,
@@ -115,29 +123,35 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                         ),
                     ) 
                 ),
+                Container(
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                            Text('Day'),
+                            Text('Start Time'),
+                            Text('End Time'),
+                            Text('Income'),
+                        ]
+                    )
+                ),
                 Expanded(
                     child: FutureBuilder(
                         future: _getShifts(),
                         builder: _buildShiftsList,
                     )
                 ),
-                Expanded(
-                child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Container(
-                            width: width,
-                            height: 48,
-                            color: Colors.white,
-                            child: Row(
-                                children: <Widget>[
-                                    Padding(padding: const EdgeInsets.all(20.0)),
-                                    Text('Total Income', style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold)),
-                                    Padding(padding: const EdgeInsets.all(70.0)),
-                                    Text(_income, style: TextStyle(color: Colors.green, fontSize: 20.0, fontWeight: FontWeight.bold)),
-                                ]
-                            ) 
-                        )
-                    )
+                Container(
+                    width: width,
+                    height: 48,
+                    color: Colors.white,
+                    child: Row(
+                        children: <Widget>[
+                            Padding(padding: const EdgeInsets.all(20.0)),
+                            Text('Total Income', style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold)),
+                            Padding(padding: const EdgeInsets.all(70.0)),
+                            Text(_income, style: TextStyle(color: Colors.green, fontSize: 20.0, fontWeight: FontWeight.bold)),
+                        ]
+                    ) 
                 ),
                  
             ]
