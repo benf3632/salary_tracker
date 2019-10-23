@@ -44,16 +44,27 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       WidgetsBinding.instance.addObserver(this);
       _controller = ScrollController();
       selectedMonth = DateTime.now().month - 1;
+      currentYear = DateTime.now().year;
       _getIncome();
       _read();
       WidgetsBinding.instance.addPostFrameCallback((_) {double width = MediaQuery.of(context).size.width; _controller.jumpTo(width * selectedMonth);});
+  }
+
+  void _scrollListener() {
+    double width = MediaQuery.of(context).size.width;
+    if (_controller.offset >= _controller.position.maxScrollExtent &&
+            !_controller.position.outOfRange) {
+        print('bot');
+    }
+    if (_controller.offset <= _controller.position.minScrollExtent && 
+            !_controller.position.outOfRange) {
+    }
   }
   
   void _read() async {
     final prefs = await SharedPreferences.getInstance();
     _started = prefs.getBool('StartedShift') ?? false;
     currentShiftId = prefs.getInt('currentShiftId') ?? -1;
-    currentYear = prefs.getInt('CurrentYear') ?? 2019;
     salaryPerHour = prefs.getDouble('SalaryPerHour') ?? 0;
     setState(() {_started = _started;});
   }
@@ -82,8 +93,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       prefs.setBool('StartedShift', _started);
       prefs.setInt('currentShiftId', currentShiftId);
       prefs.setDouble('SalaryPerHour', salaryPerHour);
-      prefs.setInt('CurrentYear', currentYear);
   }
+
+  double _currentStart = -1;
   
   @override
   Widget build(BuildContext context) {
@@ -102,9 +114,39 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                     height: 50,
                     child: NotificationListener<ScrollNotification>(
                             onNotification: (scrollNotification) {
-                                if (scrollNotification is ScrollEndNotification) {
+                                if (scrollNotification is ScrollEndNotification ) {
+                                    if (_currentStart == width * 11 &&_currentStart == scrollNotification.metrics.pixels) {
+                                        _currentStart = -2;
+                                        setState(() {
+                                            currentYear += 1;
+                                            selectedMonth = 0;
+                                        });
+                                        _controller.jumpTo(width * selectedMonth);
+                                        return true;
+                                    }
+                                    if (_currentStart == width * 0  && _currentStart == scrollNotification.metrics.pixels) {
+                                        _currentStart = -2;
+                                        setState(() {
+                                            currentYear -= 1;
+                                            selectedMonth = 11;
+                                        });
+                                        _controller.jumpTo(width * selectedMonth);
+                                        return true;
+                                    }
                                     int i = (scrollNotification.metrics.pixels / width).round();
-                                    setState(() {selectedMonth = i;});
+                                    setState(() {selectedMonth = i; _getIncome();});
+                                    return true;
+                                }
+                                if (scrollNotification is ScrollStartNotification) {
+                                    if (_currentStart == -2) {
+                                        _currentStart = -1;
+                                        return true;
+                                    }
+                                    if (scrollNotification.metrics.pixels == width * 11 || scrollNotification.metrics.pixels == width * 0 ) {
+                                        _currentStart = scrollNotification.metrics.pixels;
+                                        return true;
+                                    } 
+                                    
                                 }
                                 return true;
                             },
@@ -117,7 +159,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                 return Container(
                                         color: Colors.white,
                                         width: width,
-                                        child: Center(child: Text(months[index]))
+                                        child: Center(child: Text('${months[index]} $currentYear'))
                                 );
                             }
                         ),
@@ -139,6 +181,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                         future: _getShifts(),
                         builder: _buildShiftsList,
                     )
+                ),
+                Padding(
+                    padding: EdgeInsets.all(40.0),
                 ),
                 Container(
                     width: width,
@@ -174,7 +219,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
     Widget _buildShiftsList(BuildContext context, AsyncSnapshot snapshot) {
         List<Shift> shifts = snapshot.data ?? [];
-        return ListView.builder(
+        return ListView.separated(
+            separatorBuilder: (context, index) {
+                return Divider(height: 0.0, color: Colors.grey);
+            },
             itemCount: shifts.length,
             itemBuilder: (BuildContext context, int index) {
                 Shift shift = shifts[index];
@@ -188,7 +236,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget> [
                                 Text(date.day.toString()),
-                                Text('${startTime.hour.toString()}:${startTime.minute.toString()}'),
+                                Text('${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}'),
                                 Text('Shift On Progress'),
                             ]
                         ),
@@ -204,8 +252,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget> [
                                 Text(date.day.toString()),
-                                Text('${startTime.hour.toString()}:${startTime.minute.toString()}'),
-                                Text('${endTime.hour.toString()}:${endTime.minute.toString()}'),
+                                Text('${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}'),
+                                Text('${endTime.hour.toString().padLeft(2,'0')}:${endTime.minute.toString().padLeft(2, '0')}'),
                                 Text(shift.income.toStringAsFixed(2)),
                             ]
                         ),
