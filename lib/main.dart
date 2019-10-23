@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'database_helper.dart';
 import 'dart:core';
+import 'add_manual_shift.dart';
 
 void main() => runApp(MyApp());
 
@@ -50,16 +51,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       WidgetsBinding.instance.addPostFrameCallback((_) {double width = MediaQuery.of(context).size.width; _controller.jumpTo(width * selectedMonth);});
   }
 
-  void _scrollListener() {
-    double width = MediaQuery.of(context).size.width;
-    if (_controller.offset >= _controller.position.maxScrollExtent &&
-            !_controller.position.outOfRange) {
-        print('bot');
-    }
-    if (_controller.offset <= _controller.position.minScrollExtent && 
-            !_controller.position.outOfRange) {
-    }
-  }
   
   void _read() async {
     final prefs = await SharedPreferences.getInstance();
@@ -349,6 +340,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             color: Colors.blue,
                         ),
                         
+                    ),
+                    ListTile(
+                        title: Text('Add Shift'),
+                        onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => AddManualShift()));}
                     ),
                     ListTile(
                         title: Text('Set salary per hour'),
