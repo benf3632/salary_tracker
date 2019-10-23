@@ -116,7 +116,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             onNotification: (scrollNotification) {
                                 if (scrollNotification is ScrollEndNotification ) {
                                     if (_currentStart == width * 11 &&_currentStart == scrollNotification.metrics.pixels) {
-                                        _currentStart = -2;
+                                        _currentStart = 2;
                                         setState(() {
                                             currentYear += 1;
                                             selectedMonth = 0;
@@ -125,7 +125,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                         return true;
                                     }
                                     if (_currentStart == width * 0  && _currentStart == scrollNotification.metrics.pixels) {
-                                        _currentStart = -2;
+                                        _currentStart = 2;
                                         setState(() {
                                             currentYear -= 1;
                                             selectedMonth = 11;
@@ -138,7 +138,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                     return true;
                                 }
                                 if (scrollNotification is ScrollStartNotification) {
-                                    if (_currentStart == -2) {
+                                    if (_currentStart >= 0 ) {
                                         _currentStart = -1;
                                         return true;
                                     }
@@ -146,7 +146,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                         _currentStart = scrollNotification.metrics.pixels;
                                         return true;
                                     } 
-                                    
                                 }
                                 return true;
                             },
