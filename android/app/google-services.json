@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "805907375823",
+    "firebase_url": "https://salary-tracker-3afae.firebaseio.com",
+    "project_id": "salary-tracker-3afae",
+    "storage_bucket": "salary-tracker-3afae.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:805907375823:android:a2d4f8d0bfa80ded8ff9ba",
+        "android_client_info": {
+          "package_name": "com.cookies.salary_tracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "805907375823-7rpcub1dt79aakcumdb4uqj3q916ngb0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cookies.salary_tracker",
+            "certificate_hash": "f28d0f25079be8c310e8af21543f6ab06f7d048c"
+          }
+        },
+        {
+          "client_id": "805907375823-hkj1blnahs87pmke0n9esegssbarq2im.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuf4DpIDCdDQ9E5gm5M10Icx_DKoEpcDg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "805907375823-hkj1blnahs87pmke0n9esegssbarq2im.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

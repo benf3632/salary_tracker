@@ -40,6 +40,8 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<false/>
+    <false/>
+    <key>NSFaceIDUsageDescription</key>
+    <string>For Starting a shift and Stopping</string>
 </dict>
 </plist>
