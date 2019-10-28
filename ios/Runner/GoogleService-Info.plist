@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>805907375823-mgiae88te2k61oj001b4cdke6thlbkqu.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.805907375823-mgiae88te2k61oj001b4cdke6thlbkqu</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>805907375823-3csgdjh6p9g76n12rfkr9h3otvdanvvf.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyD9ejQz-4mrrDjD_E60bTsb_cIfIensXgU</string>
+	<key>GCM_SENDER_ID</key>
+	<string>805907375823</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.salaryTracker</string>
+	<key>PROJECT_ID</key>
+	<string>salary-tracker-3afae</string>
+	<key>STORAGE_BUCKET</key>
+	<string>salary-tracker-3afae.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:805907375823:ios:c5885e1be6c38d038ff9ba</string>
+	<key>DATABASE_URL</key>
+	<string>https://salary-tracker-3afae.firebaseio.com</string>
+</dict>
+</plist>
