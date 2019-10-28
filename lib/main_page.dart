@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'database_helper.dart';
+import 'database_helper_firestore.dart';
 import 'add_manual_shift_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:core';
@@ -25,10 +25,12 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
   String _income = "0";
   final List<String> months = ["January", "Fabuary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   int selectedMonth = 0;
-  var currentShiftId = -1;
+  var currentShiftId = '';
   int currentYear = 2019;
   double salaryPerHour = 0.0;
   FirebaseUser _user;
+  DatabaseHelper helper;
+  bool _signed = true;
   
   ScrollController _controller;
   double _currentStart = -1;
@@ -39,11 +41,13 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
       WidgetsBinding.instance.addObserver(this);
       _user = widget.user;
       String userUid = _user.uid;
+      helper = DatabaseHelper(userUid);
       _controller = ScrollController();
       selectedMonth = DateTime.now().month - 1;
       currentYear = DateTime.now().year;
       _getIncome();
       _read();
+      _signed = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {double width = MediaQuery.of(context).size.width; _controller.jumpTo(width * selectedMonth);});
   }
     @override
@@ -55,7 +59,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
   void _read() async {
     final prefs = await SharedPreferences.getInstance();
     _started = prefs.getBool('StartedShift') ?? false;
-    currentShiftId = prefs.getInt('currentShiftId') ?? -1;
+    currentShiftId = prefs.getString('currentShiftId') ?? '';
     salaryPerHour = prefs.getDouble('SalaryPerHour') ?? 0;
     setState(() {_started = _started;});
   }
@@ -63,8 +67,9 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
   void _save() async {
       final prefs = await SharedPreferences.getInstance();
       prefs.setBool('StartedShift', _started);
-      prefs.setInt('currentShiftId', currentShiftId);
+      prefs.setString('currentShiftId', currentShiftId);
       prefs.setDouble('SalaryPerHour', salaryPerHour);
+      prefs.setBool('Signed?', _signed);
   }
 
   @override
@@ -198,7 +203,6 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
     );
 }
     Future<List<Shift>> _getShifts() async {
-        DatabaseHelper helper = DatabaseHelper.instance;
         List<Shift> shifts = await helper.queryShiftsByMonthAndYear(selectedMonth + 1, currentYear);
         return shifts;
     }
@@ -250,7 +254,6 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
     }
 
    void _getIncome() async {
-        DatabaseHelper helper = DatabaseHelper.instance;
         double income = await helper.getAllIncomeByDate(selectedMonth + 1, currentYear);
         setState(() {_income = income.toStringAsFixed(2);});
 
@@ -259,7 +262,6 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
   void _startShift() async{
       bool didAuth = await _auth();
       if (didAuth) {
-          DatabaseHelper helper = DatabaseHelper.instance;
           if (_started) {
               DateTime time = DateTime.now();
               Shift shift = await helper.queryShift(currentShiftId);
@@ -273,7 +275,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
           } else {
              DateTime time = DateTime.now();
              Shift shift = Shift(time.microsecondsSinceEpoch,0,time.toString(),0);
-             int id = await helper.insert(shift);
+             String id = await helper.insert(shift);
              currentShiftId = id;
           }
           await _getIncome();
@@ -297,7 +299,6 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
   }
   
     void _clearDB() async {
-        DatabaseHelper helper = DatabaseHelper.instance;
         showDialog(
             context: context,
             builder: (BuildContext context) {
@@ -307,8 +308,8 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
                         actions: <Widget>[
                             FlatButton(
                                 child: Text('CLEAR!'),
-                                onPressed: () {
-                                    helper.clear();
+                                onPressed: () async {
+                                    await helper.clear();
                                     setState(() {_started = false;});
                                     Navigator.of(context).pop();
                                 }
@@ -349,7 +350,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
                     ),
                     ListTile(
                         title: Text('SignOut'),
-                        onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage())); signOutGoogle(); },
+                        onTap: () async {_signed = false; await _save(); Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage())); signOutGoogle(); },
                     )
                 ]
             )

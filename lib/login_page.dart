@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'sign_in.dart';
 import 'main_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class LoginPage extends StatefulWidget {
@@ -10,6 +11,28 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+    
+    @override
+    void initState() {
+        super.initState();
+        _silentLogin();
+    }
+
+    void _silentLogin() async {
+        final prefs = await SharedPreferences.getInstance();
+        final bool signed = prefs.getBool('Signed?') ?? false;
+        if (signed) {
+            var user = await signSilentGoogle();
+            if (user != null) {
+                Navigator.push(context,
+                            MaterialPageRoute(
+                                builder: (context) => MainPage(user: user)
+                            )
+                    );
+            }
+        }
+    }
+
     @override
     Widget build(BuildContext context) {
         return Scaffold(
