@@ -25,7 +25,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
   String _income = "0";
   final List<String> months = ["January", "Fabuary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   int selectedMonth = 0;
-  String currentShiftId = '';
+  var currentShiftId = -1;
   int currentYear = 2019;
   double salaryPerHour = 0.0;
   FirebaseUser _user;
@@ -55,7 +55,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
   void _read() async {
     final prefs = await SharedPreferences.getInstance();
     _started = prefs.getBool('StartedShift') ?? false;
-    currentShiftId = prefs.getString('currentShiftId') ?? '';
+    currentShiftId = prefs.getInt('currentShiftId') ?? -1;
     salaryPerHour = prefs.getDouble('SalaryPerHour') ?? 0;
     setState(() {_started = _started;});
   }
@@ -63,7 +63,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
   void _save() async {
       final prefs = await SharedPreferences.getInstance();
       prefs.setBool('StartedShift', _started);
-      prefs.setString('currentShiftId', currentShiftId);
+      prefs.setInt('currentShiftId', currentShiftId);
       prefs.setDouble('SalaryPerHour', salaryPerHour);
   }
 

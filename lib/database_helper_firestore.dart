@@ -47,4 +47,14 @@ class DatabaseHelper {
                 databaseReference.collection(collectionId).add(shift.toMap());
         return dr.documentID;
     } 
+
+    Future<List<Shift>> queryShiftsByMonthAndYear(int month, int year) async {
+        String monthStr = month.toString().padLeft(2, '0');
+        String yearStr = year.toString();
+        databaseReference.collection(collectionId).getDocuments().then((QuerySnapshot snapshot) {
+            snapshot.documents.forEach((f) {
+                
+            });
+        });
+    }
 }
