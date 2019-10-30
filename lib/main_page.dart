@@ -179,7 +179,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
                 Container(
                     width: width,
                     height: 48,
-                    color: Colors.white,
+                    color: Color(0xfff2f3f7),
                     child: Row(
                         children: <Widget>[
                             Padding(padding: const EdgeInsets.all(20.0)),
@@ -221,7 +221,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
                     var startTime = DateTime.fromMicrosecondsSinceEpoch(shift.startTime);
                     return Container(
                         height: 50.0,
-                        color: index % 2 == 0 ? Colors.white : Color(0xffF2F3F7),
+                        color: index % 2 == 0 ? Colors.white : Color(0xfff2f3f7),
                         child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget> [
@@ -332,6 +332,9 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
                 padding: EdgeInsets.zero,
                 children: <Widget>[
                     UserAccountsDrawerHeader(
+                        decoration: BoxDecoration(
+                                color: Colors.greenAccent,
+                        ), 
                         accountName: Text(_user.displayName),
                         accountEmail: Text(_user.email),
                         currentAccountPicture: CircleAvatar(backgroundImage: NetworkImage(_user.photoUrl)),
@@ -350,7 +353,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
                     ),
                     ListTile(
                         title: Text('SignOut'),
-                        onTap: () async {_signed = false; await _save(); Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage())); signOutGoogle(); },
+                        onTap: () async {_signed = false; await _save(); Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage())); signOutGoogle(); },
                     )
                 ]
             )

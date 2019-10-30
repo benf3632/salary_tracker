@@ -24,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
         if (signed) {
             var user = await signSilentGoogle();
             if (user != null) {
-                Navigator.push(context,
+                Navigator.pushReplacement(context,
                             MaterialPageRoute(
                                 builder: (context) => MainPage(user: user)
                             )
@@ -56,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
             splashColor: Colors.grey,
             onPressed: () {
                 signInWithGoogle().then((user) {print('Finished sign in');
-                    Navigator.push(context,
+                    Navigator.pushReplacement(context,
                             MaterialPageRoute(
                                 builder: (context) => MainPage(user: user)
                             )

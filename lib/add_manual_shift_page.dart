@@ -13,11 +13,12 @@ class AddManualShift extends StatefulWidget {
 
 class _AddManualShiftState extends State<AddManualShift> {
 
-    var _startTime = null;
-    var _endTime = null;
+    var _startTime;
+    var _endTime;
 
     @override
     Widget build(BuildContext context) {
+        double screenWidth = MediaQuery.of(context).size.width;
         return Scaffold(
             appBar: AppBar(
                 title: Text('Add Shift', style: TextStyle(color: Colors.white)),
@@ -26,18 +27,48 @@ class _AddManualShiftState extends State<AddManualShift> {
             ),
             body: Column(
                     children: [
-                        Text('Start Time: '),
                         Container(
-                            decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey)
+                            child: Text('Start Time:'),
+                            margin: EdgeInsets.only(top: 20, right: screenWidth - 150),
+                            padding: EdgeInsets.only(bottom: 5),
+                        ),
+                        InkWell(
+                            child: Container(
+                                decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey),
+                                    borderRadius: BorderRadius.all(Radius.circular(40.0)),
+                                ),
+                                width: screenWidth - 50,
+                                height: 50,
+                                child: Container(
+                                    child: Text('${_startTime != null ? _startTime.toString() : ''}'),
+                                    alignment: Alignment.center,
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                ),
+                                margin: const EdgeInsets.only(right: 20, left: 20),
+                                padding: const EdgeInsets.only(top: 10),
                             ),
-                            width: 300,
-                            height: 25,
-                            margin: const EdgeInsets.all(35.0),
-                            child: Text(''),
-                        )
+                            onTap: () => _showDateTimePicker(false),
+                        ),
                     ]
                 )
+        );
+    }
+
+    void _showDateTimePicker(bool option) {
+        DatePicker.showDateTimePicker(context,
+            showTitleActions: true,
+            currentTime: DateTime.now(),
+            onConfirm: (date) {
+                setState(() {
+                    if (option) {
+                        _endTime = date;
+                    } else {
+                        _startTime = date;
+                    }
+                });
+                print(_startTime.toString());
+            }
         );
     }
 }

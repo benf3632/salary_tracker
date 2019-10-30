@@ -19,7 +19,6 @@ Future<FirebaseUser> signInWithGoogle() async {
 
     final FirebaseUser currentUser = await _auth.currentUser();
     
-    print('sign in $currentUser');
     
     return currentUser;
 }
