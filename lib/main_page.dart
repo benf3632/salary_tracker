@@ -341,7 +341,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
                     ), 
                     ListTile(
                         title: Text('Add Shift'),
-                        onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => AddManualShift()));}
+                        onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => AddManualShift(helper: helper)));}
                     ),
                     ListTile(
                         title: Text('Set salary per hour'),

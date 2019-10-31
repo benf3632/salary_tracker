@@ -1,24 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
-import 'package:intl/intl.dart';
-
+import 'database_helper_firestore.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class AddManualShift extends StatefulWidget {
-    AddManualShift({Key key}) : super(key: key);
-
+    AddManualShift({Key key, this.helper}) : super(key: key);
+    
+    final DatabaseHelper helper;
     @override
     _AddManualShiftState createState() => _AddManualShiftState();
 }
 
 
 class _AddManualShiftState extends State<AddManualShift> {
-
     var _startTime;
     var _endTime;
+    var _income;
+    DatabaseHelper helper;
+
+    @override
+    void initState() {
+        super.initState();
+        helper = widget.helper;
+    }
+    
 
     @override
     Widget build(BuildContext context) {
         double screenWidth = MediaQuery.of(context).size.width;
+        var wageTEController = TextEditingController();
         return Scaffold(
             appBar: AppBar(
                 title: Text('Add Shift', style: TextStyle(color: Colors.white)),
@@ -50,6 +60,55 @@ class _AddManualShiftState extends State<AddManualShift> {
                             ),
                             onTap: () => _showDateTimePicker(false),
                         ),
+                        Container(
+                            child: Text('End Time:'),
+                            padding: EdgeInsets.only(bottom: 5.0),
+                            margin: EdgeInsets.only(top: 20.0, right: screenWidth - 150),
+                        ),
+                        InkWell(
+                            child: Container(
+                                decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey),
+                                    borderRadius: BorderRadius.all(Radius.circular(40.0)),
+                                ),
+                                width: screenWidth - 50,
+                                height: 50,
+                                child: Container(
+                                    child: Text('${_endTime != null ? _endTime.toString() : ''}'),
+                                    alignment: Alignment.center,
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                ),
+                                margin: const EdgeInsets.only(right: 20, left: 20),
+                                padding: const EdgeInsets.only(top: 20),
+                            ),
+                            onTap: () => _showDateTimePicker(true),
+                        ),
+                        Container(
+                            child: TextField(
+                                    decoration: InputDecoration(
+                                        labelText: 'Hourly Wage',
+                                        border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(40.0))),
+                                    ),
+                                    onChanged: (wage) {
+                                        double temp = double.tryParse(wage);
+                                        if (temp == null) {
+                                            wageTEController.text = '';
+                                        } else {
+                                            _income = temp;
+                                        }
+                                    },
+                                    controller: wageTEController,
+                            ),
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.all(Radius.circular(40.0))
+                            ),
+                            width: screenWidth / 2,
+                            padding: const EdgeInsets.only(top: 20.0),
+                        ),
+                        RaisedButton(
+                            child: Text('Add Shift'),
+                            onPressed: _addShift,
+                        ),
                     ]
                 )
         );
@@ -67,8 +126,30 @@ class _AddManualShiftState extends State<AddManualShift> {
                         _startTime = date;
                     }
                 });
-                print(_startTime.toString());
             }
         );
+    }
+
+    void _addShift() async {
+        print(_income);
+        if (_startTime == null || _endTime == null || _income == null) {
+            Fluttertoast.showToast(
+                msg: 'Please Fill all fields',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.CENTER,
+                timeInSecForIos: 1,
+            );
+            return;
+        } 
+        var startTime = _startTime.microsecondsSinceEpoch;
+        var endTime = _endTime.microsecondsSinceEpoch;
+        var hoursWorked = (endTime - startTime) / 1000000;
+        hoursWorked /= 3600;
+        var income = hoursWorked * _income;
+        Shift shift = Shift(startTime, endTime, _startTime.toString(), income);
+        String id =  await helper.insert(shift);
+        shift.id = id;
+        helper.update(shift);
+        Navigator.pop(context);
     }
 }

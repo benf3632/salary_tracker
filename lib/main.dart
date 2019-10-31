@@ -9,7 +9,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Salary Tracker',
       home: LoginPage(),
-     // home: MyHomePage(title: 'Salary Tracker'),
     );
   }
 }
