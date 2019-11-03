@@ -131,7 +131,6 @@ class _AddManualShiftState extends State<AddManualShift> {
     }
 
     void _addShift() async {
-        print(_income);
         if (_startTime == null || _endTime == null || _income == null) {
             Fluttertoast.showToast(
                 msg: 'Please Fill all fields',
