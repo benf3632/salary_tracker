@@ -15,6 +15,14 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final GlobalKey<State> _keyLoader = new GlobalKey<State>();
   bool _registerScreen = false;
+  Map<String, TextEditingController> _textControllers = {
+    'LoginUsername': TextEditingController(),
+    'LoginPassword': TextEditingController(),
+    'RegisterUsername': TextEditingController(),
+    'RegisterPassword': TextEditingController(),
+    'RegisterConfirm': TextEditingController(),
+    'RegisterEmail': TextEditingController(),
+  };
 
   @override
   void initState() {
@@ -55,34 +63,113 @@ class _LoginPageState extends State<LoginPage> {
         resizeToAvoidBottomInset: false,
         body: Stack(
             children: <Widget> [
-              AnimatedSwitcher(
-                child: !_registerScreen
-                  ? _loginStack(screenWidth, screenHeight)
-                  :  Container(
-                      child: RaisedButton(
-                        child: Text('Login'),
-                        onPressed: () {
-                          setState(() {
-                          _registerScreen = false; 
-                        });
-                        },
-                      ),
-                      margin: EdgeInsets.only(top: screenHeight / 2, left: screenWidth / 2),
-                    ),
-                duration: Duration(milliseconds: 750),
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  final offsetAnimation = Tween<Offset>(begin: Offset(-1.0, 0.0), end: Offset(0.0, 0.0)).animate(animation);
-                  return SlideTransition(
-                    position: offsetAnimation,
-                    child: child,
-                  );
-                },
-              ),
+                _registerScreen
+                  ? _registerStack(screenWidth, screenHeight)
+                  : _loginStack(screenWidth, screenHeight),
               _waveDesStack(screenWidth, screenHeight),
-              
             ]
         )
       );
+  }
+
+  Widget _registerStack(double screenWidth, double screenHeight) {
+    return Stack(
+      children: <Widget>[
+        Container(
+          child: Text('Register', style: TextStyle(fontSize: 40.0, fontWeight: FontWeight.bold)),
+          margin: EdgeInsets.only(top: 200, left: screenWidth / 2 - 95),
+        ),
+        Container(
+          width: 100,
+          height: 50,
+          child: RaisedButton(
+            child: Text('Login', style: TextStyle(color: Colors.pink[500]),),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(40.0)
+            ),
+            color: Colors.white,
+            onPressed: () {
+              setState(() {
+                _registerScreen = false; 
+              });
+            },
+          ),
+        margin: EdgeInsets.only(top: screenHeight - screenHeight / 3),
+        ),
+        Container(
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(topRight: Radius.circular(50.0), bottomRight: Radius.circular(50.0)),
+                border: Border.all(color: Colors.grey),
+            ),
+            child: Column(                    
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget> [
+                  Theme(
+                    data: Theme.of(context).copyWith(splashColor: Colors.transparent),
+                    child: TextField(
+                      controller: _textControllers['RegisterUsername'],                                               
+                      decoration: InputDecoration(
+                          border: InputBorder.none,                                    
+                          prefixIcon: Icon(Icons.person),
+                          hintText: 'Username',
+                      )
+                    ),
+                  ), 
+                  Divider(),
+                  Theme(
+                    data: Theme.of(context).copyWith(splashColor: Colors.transparent),
+                    child: TextField(
+                      controller: _textControllers['RegisterEmail'],
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        prefixIcon: Icon(Icons.email),
+                        hintText: 'Email',
+                      ),
+                    ),
+                  ),
+                  Divider(),
+                  Theme(
+                    data: Theme.of(context).copyWith(splashColor: Colors.transparent),
+                    child: TextField(
+                      controller: _textControllers['RegisterPassword'],
+                      obscureText: true,
+                      decoration: InputDecoration(
+                          border: InputBorder.none,
+                          prefixIcon: Icon(Icons.lock),
+                          hintText: 'Password',
+                      )
+                    ),
+                  ),
+                  Divider(),
+                  Theme(
+                    data: Theme.of(context).copyWith(splashColor: Colors.transparent),
+                    child: TextField(
+                      controller: _textControllers['RegisterConfirm'],
+                      obscureText: true,
+                      decoration: InputDecoration(
+                          border: InputBorder.none,
+                          prefixIcon: Icon(Icons.lock),
+                          hintText: 'Confirm Password',
+                      )
+                    ),
+                  )
+              ]
+            ),
+            width: screenWidth / 1.15,
+            height: 242,
+            margin: EdgeInsets.only(top: screenHeight / 3),
+        ),
+        Container(
+          margin: EdgeInsets.only(top: screenHeight / 2 - 50, left: screenWidth - 75),
+          child: FloatingActionButton(
+            heroTag: "Register",
+            child: Icon(Icons.check),
+            backgroundColor: Colors.greenAccent,
+            onPressed: () {},
+          ),
+        )
+      ],
+    );
   }
 
   Widget _waveDesStack(double screenWidth, double screenHeight) {
@@ -165,7 +252,8 @@ class _LoginPageState extends State<LoginPage> {
               children: <Widget> [
                   Theme(
                     data: Theme.of(context).copyWith(splashColor: Colors.transparent),
-                    child: TextField(                                               
+                    child: TextField(
+                      controller: _textControllers['LoginUsername'],                                           
                       decoration: InputDecoration(
                           border: InputBorder.none,                                    
                           prefixIcon: Icon(Icons.person),
@@ -177,6 +265,7 @@ class _LoginPageState extends State<LoginPage> {
                   Theme(
                     data: Theme.of(context).copyWith(splashColor: Colors.transparent),
                     child: TextField(
+                      controller: _textControllers['LoginPassword'],
                       obscureText: true,
                       decoration: InputDecoration(
                           border: InputBorder.none,
@@ -196,8 +285,13 @@ class _LoginPageState extends State<LoginPage> {
             margin: EdgeInsets.only(top: 390, left: screenWidth - 80),
         ),
         Container(
+          width: 100,
+          height: 50,
           child: RaisedButton(
-            child: Text('Register'),
+            child: Text('Register', style: TextStyle(color: Colors.pink[500])),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(40.0),
+            ),
             color: Colors.white,
             onPressed: () {
               setState(() {
@@ -205,17 +299,24 @@ class _LoginPageState extends State<LoginPage> {
               });
             },
           ),
-          margin: EdgeInsets.only(top: screenHeight - screenHeight / 3, left: screenWidth / 4.50),
+          margin: EdgeInsets.only(top: screenHeight - screenHeight / 3),
         ),
         Container(
             child: FloatingActionButton(
               heroTag: "Login",
-                child: Icon(Icons.arrow_forward),
-                backgroundColor: Colors.greenAccent,
-                onPressed: () {}
+              child: Icon(Icons.arrow_forward),
+              backgroundColor: Colors.greenAccent,
+              onPressed: () {}
             ),
             margin: EdgeInsets.only(top: 390, left: screenWidth - 150)
         ),
+        GestureDetector(
+          child: Container(
+            child: Text('Forgot?', style: TextStyle(color: Colors.grey),),
+            margin: EdgeInsets.only(top: screenHeight / 2 + 70, left: screenWidth - screenWidth / 2),
+          ),
+          onTap: () {print('I Dont Remember');},
+        )
       ],
     );
   }
