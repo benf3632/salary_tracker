@@ -55,21 +55,28 @@ class _LoginPageState extends State<LoginPage> {
         resizeToAvoidBottomInset: false,
         body: Stack(
             children: <Widget> [
-              AnimatedCrossFade(
-                duration: Duration(milliseconds: 500),
-                firstChild: _loginStack(screenWidth, screenHeight),
-                secondChild: Container(
-                  child: RaisedButton(
-                    child: Text('Login'),
-                    onPressed: () {
-                      setState(() {
-                       _registerScreen = false; 
-                      });
-                    },
-                  ),
-                  margin: EdgeInsets.only(top: screenHeight / 2, left: screenWidth / 2),
-                ),
-                crossFadeState: _registerScreen ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              AnimatedSwitcher(
+                child: !_registerScreen
+                  ? _loginStack(screenWidth, screenHeight)
+                  :  Container(
+                      child: RaisedButton(
+                        child: Text('Login'),
+                        onPressed: () {
+                          setState(() {
+                          _registerScreen = false; 
+                        });
+                        },
+                      ),
+                      margin: EdgeInsets.only(top: screenHeight / 2, left: screenWidth / 2),
+                    ),
+                duration: Duration(milliseconds: 750),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  final offsetAnimation = Tween<Offset>(begin: Offset(-1.0, 0.0), end: Offset(0.0, 0.0)).animate(animation);
+                  return SlideTransition(
+                    position: offsetAnimation,
+                    child: child,
+                  );
+                },
               ),
               _waveDesStack(screenWidth, screenHeight),
               
