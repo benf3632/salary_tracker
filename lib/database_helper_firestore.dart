@@ -68,7 +68,7 @@ class DatabaseHelper {
         return shift;
     }
 
-    void clear() async {
+    Future<void> clear() async {
         databaseReference.collection(collectionId).getDocuments().then((snapshot) {
             for (DocumentSnapshot ds in snapshot.documents) {
                 ds.reference.delete();
@@ -76,7 +76,7 @@ class DatabaseHelper {
         });
     }
 
-    void update(Shift shift) async {
+    Future<void> update(Shift shift) async {
         await databaseReference.collection(collectionId).document(shift.id)
                 .updateData(shift.toMap());
     }

@@ -65,7 +65,7 @@ Future<dynamic> signIn(String email, String password) async {
   catch (e) {
     return e;
   }
-  return null;
+  return 'Please verify you email address';
 }
 
 Future<dynamic> signUp(String email, String password) async {

@@ -338,14 +338,25 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         Navigator.pop(context);
       }
-      Fluttertoast.showToast(
-        msg: user.message,
+      if (user is String) {
+        Fluttertoast.showToast(
+        msg: user,
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.BOTTOM,
         backgroundColor: Colors.grey,
         textColor: Colors.white,
         fontSize: 14.0,
       );
+      } else {
+        Fluttertoast.showToast(
+        msg: user.message,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.grey,
+        textColor: Colors.white,
+        fontSize: 14.0,
+        );
+      }
     }
   }
 
@@ -368,10 +379,14 @@ class _LoginPageState extends State<LoginPage> {
     var user = await signUp(email, password);
     if (user is FirebaseUser) {
       Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
-      Navigator.pushReplacement(context,
-        MaterialPageRoute(
-            builder: (context) => MainPage(user: user, signMethod: 2)
-        )
+      _registerScreen = false;
+      Fluttertoast.showToast(
+        msg: 'Please Verify your email now and Login',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.grey,
+        textColor: Colors.white,
+        fontSize: 14.0,
       );
     } else {
       if (_keyLoader.currentContext != null) {
