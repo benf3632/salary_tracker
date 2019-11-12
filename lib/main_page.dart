@@ -12,8 +12,9 @@ import 'login_page.dart';
 
 class MainPage extends StatefulWidget {
   final FirebaseUser user;
+  final int signMethod;
 
-  MainPage({Key key, this.user}) : super(key: key);
+  MainPage({Key key, this.user, this.signMethod}) : super(key: key);
 
   @override
   MainPageState createState() => MainPageState();
@@ -30,7 +31,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
   double salaryPerHour = 0.0;
   FirebaseUser _user;
   DatabaseHelper helper;
-  bool _signed = true;
+  int _signed = 0;
   
   ScrollController _controller;
   double _currentStart = -1;
@@ -47,7 +48,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
       currentYear = DateTime.now().year;
       _getIncome();
       _read();
-      _signed = true;
+      _signed = widget.signMethod;
       WidgetsBinding.instance.addPostFrameCallback((_) {double width = MediaQuery.of(context).size.width; _controller.jumpTo(width * selectedMonth);});
   }
     @override
@@ -64,12 +65,12 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
     setState(() {_started = _started;});
   }
 
-  void _save() async {
+  Future<void> _save() async {
       final prefs = await SharedPreferences.getInstance();
       prefs.setBool('StartedShift', _started);
       prefs.setString('currentShiftId', currentShiftId);
       prefs.setDouble('SalaryPerHour', salaryPerHour);
-      prefs.setBool('Signed?', _signed);
+      prefs.setInt('Signed?', _signed);
   }
 
   @override
@@ -353,11 +354,22 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
                     ),
                     ListTile(
                         title: Text('SignOut'),
-                        onTap: () async {_signed = false; await _save(); Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage())); signOutGoogle(); },
+                        onTap: _signOut,
                     )
                 ]
             )
         );
+    }
+
+    void _signOut() async {
+      if (_signed == 1) {
+        signOutGoogle();
+      } else if (_signed == 2) {
+        signOut();
+      }
+      _signed = 0;
+      await _save();
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage())); 
     }
     
     Future<Null> _setSalaryPerHourDialog() async {

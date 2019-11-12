@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:wave/config.dart';
 import 'sign_in.dart';
 import 'main_page.dart';
@@ -18,7 +20,6 @@ class _LoginPageState extends State<LoginPage> {
   Map<String, TextEditingController> _textControllers = {
     'LoginUsername': TextEditingController(),
     'LoginPassword': TextEditingController(),
-    'RegisterUsername': TextEditingController(),
     'RegisterPassword': TextEditingController(),
     'RegisterConfirm': TextEditingController(),
     'RegisterEmail': TextEditingController(),
@@ -33,25 +34,35 @@ class _LoginPageState extends State<LoginPage> {
   void _silentLogin() async {
       Dialogs.showLoadingDialog(context, _keyLoader);
       final prefs = await SharedPreferences.getInstance();
-      final bool signed = prefs.getBool('Signed?') ?? false;
-      if (signed) {
+      final int signed = prefs.getInt('Signed?') ?? 0;
+      if (signed == 1) {
           var user = await signSilentGoogle();
           if (user != null) {
               Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
               Navigator.pushReplacement(context,
-                          MaterialPageRoute(
-                              builder: (context) => MainPage(user: user)
-                          )
-                  );
+                MaterialPageRoute(
+                    builder: (context) => MainPage(user: user, signMethod: 1),
+                )
+              );
           } else {
               Navigator.of(_keyLoader.currentContext).pop();
           }
+      } else if (signed == 2) {
+        var user = await getCurrentUser();
+        if (user != null) {
+          Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
+            Navigator.pushReplacement(context,
+              MaterialPageRoute(
+                  builder: (context) => MainPage(user: user, signMethod: 2),
+              )
+          );
+        }
       } else {
-          if (_keyLoader.currentContext != null) {
-              Navigator.of(_keyLoader.currentContext).pop();
-          } else {
-              Navigator.pop(context);
-          }
+        if (_keyLoader.currentContext != null) {
+            Navigator.of(_keyLoader.currentContext).pop();
+        } else {
+            Navigator.pop(context);
+        }
       }
   }
 
@@ -102,27 +113,15 @@ class _LoginPageState extends State<LoginPage> {
                 border: Border.all(color: Colors.grey),
             ),
             child: Column(                    
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget> [
-                  Theme(
-                    data: Theme.of(context).copyWith(splashColor: Colors.transparent),
-                    child: TextField(
-                      controller: _textControllers['RegisterUsername'],                                               
-                      decoration: InputDecoration(
-                          border: InputBorder.none,                                    
-                          prefixIcon: Icon(Icons.person),
-                          hintText: 'Username',
-                      )
-                    ),
-                  ), 
-                  Divider(),
                   Theme(
                     data: Theme.of(context).copyWith(splashColor: Colors.transparent),
                     child: TextField(
                       controller: _textControllers['RegisterEmail'],
                       decoration: InputDecoration(
                         border: InputBorder.none,
-                        prefixIcon: Icon(Icons.email),
+                        prefixIcon: Icon(Icons.alternate_email),
                         hintText: 'Email',
                       ),
                     ),
@@ -156,7 +155,7 @@ class _LoginPageState extends State<LoginPage> {
               ]
             ),
             width: screenWidth / 1.15,
-            height: 242,
+            height: 178,
             margin: EdgeInsets.only(top: screenHeight / 3),
         ),
         Container(
@@ -165,7 +164,7 @@ class _LoginPageState extends State<LoginPage> {
             heroTag: "Register",
             child: Icon(Icons.check),
             backgroundColor: Colors.greenAccent,
-            onPressed: () {},
+            onPressed: _register,
           ),
         )
       ],
@@ -256,8 +255,8 @@ class _LoginPageState extends State<LoginPage> {
                       controller: _textControllers['LoginUsername'],                                           
                       decoration: InputDecoration(
                           border: InputBorder.none,                                    
-                          prefixIcon: Icon(Icons.person),
-                          hintText: 'Username',
+                          prefixIcon: Icon(Icons.alternate_email),
+                          hintText: 'Email',
                       )
                     ),
                   ), 
@@ -306,7 +305,7 @@ class _LoginPageState extends State<LoginPage> {
               heroTag: "Login",
               child: Icon(Icons.arrow_forward),
               backgroundColor: Colors.greenAccent,
-              onPressed: () {}
+              onPressed: _login,
             ),
             margin: EdgeInsets.only(top: 390, left: screenWidth - 150)
         ),
@@ -321,6 +320,76 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  void _login() async {
+    String email = _textControllers['LoginUsername'].text ?? "";
+    String password = _textControllers['LoginPassword'].text ?? "";
+    Dialogs.showLoadingDialog(context, _keyLoader);
+    var user = await signIn(email, password);
+    if (user is FirebaseUser) {
+      Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
+      Navigator.pushReplacement(context,
+        MaterialPageRoute(
+            builder: (context) => MainPage(user: user, signMethod: 2)
+        )
+      );
+    } else {
+      if (_keyLoader.currentContext != null) {
+        Navigator.of(_keyLoader.currentContext).pop();
+      } else {
+        Navigator.pop(context);
+      }
+      Fluttertoast.showToast(
+        msg: user.message,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.grey,
+        textColor: Colors.white,
+        fontSize: 14.0,
+      );
+    }
+  }
+
+  void _register() async {
+    String email = _textControllers['RegisterEmail'].text ?? "";
+    String password = _textControllers['RegisterPassword'].text ?? "";
+    String confirm = _textControllers['RegisterConfirm'].text ?? "";
+    if (password != confirm) {
+      Fluttertoast.showToast(
+        msg: "Passwords don't match",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.grey,
+        textColor: Colors.white,
+        fontSize: 14.0,
+      );
+      return;
+    }
+    Dialogs.showLoadingDialog(context, _keyLoader);
+    var user = await signUp(email, password);
+    if (user is FirebaseUser) {
+      Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
+      Navigator.pushReplacement(context,
+        MaterialPageRoute(
+            builder: (context) => MainPage(user: user, signMethod: 2)
+        )
+      );
+    } else {
+      if (_keyLoader.currentContext != null) {
+        Navigator.of(_keyLoader.currentContext).pop();
+      } else {
+        Navigator.pop(context);
+      }
+      Fluttertoast.showToast(
+        msg: user.message,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.grey,
+        textColor: Colors.white,
+        fontSize: 14.0,
+      );
+    }
+  }
+
   Widget _signInButton() {
       return FloatingActionButton(
           heroTag: "GoogleLogin",
@@ -332,7 +401,7 @@ class _LoginPageState extends State<LoginPage> {
                   print('Finished sign in');
                   Navigator.pushReplacement(context,
                     MaterialPageRoute(
-                      builder: (context) => MainPage(user: user)
+                      builder: (context) => MainPage(user: user, signMethod: 1)
                     )
                   );
                 }

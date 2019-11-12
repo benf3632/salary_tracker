@@ -51,3 +51,50 @@ Future<FirebaseUser> signSilentGoogle() async {
    }
    return null;
 }
+
+Future<dynamic> signIn(String email, String password) async {
+  try {
+    AuthResult result = await _auth.signInWithEmailAndPassword(
+    email: email, password: password,
+    );
+    FirebaseUser user = result.user;
+    if (user != null && user.isEmailVerified) {
+      return user;
+    }
+  }
+  catch (e) {
+    return e;
+  }
+  return null;
+}
+
+Future<dynamic> signUp(String email, String password) async {
+  try {
+    AuthResult result = await _auth.createUserWithEmailAndPassword(
+    email: email, password: password,
+    );
+    FirebaseUser user = result.user;
+    try {
+      await user.sendEmailVerification();
+      return user;
+    }
+    catch (e) {
+      print(e.toString());
+      return e;
+    }
+  } catch (e) {
+    return e;
+  }
+}
+
+Future<void> forgotPassword(String email) async {
+  await _auth.sendPasswordResetEmail(email: email);
+}
+
+Future<FirebaseUser> getCurrentUser() async {
+  return await _auth.currentUser();
+}
+
+Future<void> signOut() async {
+  return _auth.signOut();
+}
