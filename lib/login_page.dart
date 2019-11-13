@@ -314,7 +314,55 @@ class _LoginPageState extends State<LoginPage> {
             child: Text('Forgot?', style: TextStyle(color: Colors.grey),),
             margin: EdgeInsets.only(top: screenHeight / 2 + 70, left: screenWidth - screenWidth / 2),
           ),
-          onTap: () {print('I Dont Remember');},
+          onTap: () async {
+            TextEditingController emailTEC = TextEditingController();
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text('Forgot Password'),
+                  content: TextField(
+                    controller: emailTEC,
+                    decoration: InputDecoration(
+                      hintText: 'Email',
+                    ),
+                    autofocus: true,
+                  ),
+                  actions: <Widget>[
+                    FlatButton(
+                      child: Text('Send Reset'),
+                      onPressed: () async {
+                        Dialogs.showLoadingDialog(context, _keyLoader);
+                        String email = emailTEC.text;
+                        var res = await forgotPassword(email);
+                        if (res is bool && res) {
+                          Fluttertoast.showToast(
+                            msg: 'Email sent with password reset',
+                            toastLength: Toast.LENGTH_LONG,
+                            gravity: ToastGravity.BOTTOM,
+                            backgroundColor: Colors.grey,
+                            textColor: Colors.white,
+                            fontSize: 14.0,
+                          );
+                        } else {
+                          Fluttertoast.showToast(
+                            msg: res.message,
+                            toastLength: Toast.LENGTH_LONG,
+                            gravity: ToastGravity.BOTTOM,
+                            backgroundColor: Colors.grey,
+                            textColor: Colors.white,
+                            fontSize: 14.0,
+                          );
+                        }
+                        Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                );
+              }
+            );
+          },
         )
       ],
     );
@@ -346,7 +394,7 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: Colors.grey,
         textColor: Colors.white,
         fontSize: 14.0,
-      );
+        );
       } else {
         Fluttertoast.showToast(
         msg: user.message,

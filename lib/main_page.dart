@@ -159,7 +159,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
           Container(
             color: Color(0xffF2F3F7),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: <Widget>[
                 Text('Day'),
                 Text('Start Time'),
@@ -209,6 +209,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
 
   Widget _buildShiftsList(BuildContext context, AsyncSnapshot snapshot) {
     List<Shift> shifts = snapshot.data ?? [];
+    shifts.sort((a, b) => a.startTime.compareTo(b.startTime));
     return ListView.separated(
       separatorBuilder: (context, index) {
           return Divider(height: 0.0, color: Colors.grey);
@@ -239,14 +240,12 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
             height: 50.0,
             color: index % 2 == 0 ? Colors.white : Color(0xffF2F3F7),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: <Widget> [
-                Padding(padding: EdgeInsets.only(left: 10)),
                 Text(date.day.toString()),
                 Text('${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}'),
                 Text('${endTime.hour.toString().padLeft(2,'0')}:${endTime.minute.toString().padLeft(2, '0')}'),
                 Text(shift.income.toStringAsFixed(2)),
-                Padding(padding: EdgeInsets.only(right: 10)),
               ]
           ),
           );

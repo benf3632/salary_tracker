@@ -87,8 +87,14 @@ Future<dynamic> signUp(String email, String password) async {
   }
 }
 
-Future<void> forgotPassword(String email) async {
-  await _auth.sendPasswordResetEmail(email: email);
+Future<dynamic> forgotPassword(String email) async {
+  try {
+    await _auth.sendPasswordResetEmail(email: email);
+    return true;
+  }
+  catch (e) {
+    return e;
+  }
 }
 
 Future<FirebaseUser> getCurrentUser() async {
