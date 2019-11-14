@@ -427,7 +427,9 @@ class _LoginPageState extends State<LoginPage> {
     var user = await signUp(email, password);
     if (user is FirebaseUser) {
       Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
-      _registerScreen = false;
+      setState(() {
+        _registerScreen = false;
+      });
       Fluttertoast.showToast(
         msg: 'Please Verify your email now and Login',
         toastLength: Toast.LENGTH_LONG,
