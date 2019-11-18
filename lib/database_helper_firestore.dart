@@ -89,4 +89,8 @@ class DatabaseHelper {
         }
         return income;
     }
+
+    Future<void> delete(String id) async {
+      databaseReference.collection(collectionId).document(id).delete();
+    }
 }

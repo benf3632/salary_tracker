@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:local_auth/local_auth.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -217,41 +218,83 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
       itemCount: shifts.length,
       itemBuilder: (BuildContext context, int index) {
         Shift shift = shifts[index];
-        if (shift.endTime == 0) {
-            var date = DateTime.parse(shift.date);
-            var startTime = DateTime.fromMicrosecondsSinceEpoch(shift.startTime);
-            return Container(
-                height: 50.0,
-                color: index % 2 == 0 ? Colors.white : Color(0xfff2f3f7),
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget> [
-                        Text(date.day.toString()),
-                        Text('${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}'),
-                        Text('Shift On Progress'),
-                    ]
-                ),
-            );
-        } else {
-          var date = DateTime.parse(shift.date);
-          var startTime = DateTime.fromMicrosecondsSinceEpoch(shift.startTime);
-          var endTime = DateTime.fromMicrosecondsSinceEpoch(shift.endTime);
-          return Container(
+        
+        Color color = index % 2 == 0 ? Colors.white : Color(0xfff2f3f7);
+        return Slidable(
+          actionPane: SlidableDrawerActionPane(),
+          actionExtentRatio: 0.18,
+          child: Container(
             height: 50.0,
-            color: index % 2 == 0 ? Colors.white : Color(0xffF2F3F7),
+            color: color,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: <Widget> [
-                Text(date.day.toString()),
-                Text('${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}'),
-                Text('${endTime.hour.toString().padLeft(2,'0')}:${endTime.minute.toString().padLeft(2, '0')}'),
-                Text(shift.income.toStringAsFixed(2)),
-              ]
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[..._rowShift(shift),]
+            ),
           ),
-          );
-        }
+          secondaryActions: <Widget>[
+            IconSlideAction(
+              caption: 'Edit',
+              color: Colors.grey,
+              icon: Icons.edit,
+              onTap: () => _modifyShift(shift),
+            ),
+            IconSlideAction(
+              caption: 'Delete',
+              color: Colors.red,
+              icon: Icons.delete,
+              onTap: () => _deleteShift(shift),
+              closeOnTap: false,
+            )
+          ],
+        );
       }
     );
+  }
+  List<Widget> _rowShift(Shift shift) {
+    var date = DateTime.parse(shift.date);
+    var startTime = DateTime.fromMicrosecondsSinceEpoch(shift.startTime);
+    var endTime = DateTime.fromMicrosecondsSinceEpoch(shift.endTime);
+    return shift.endTime == 0 ?
+      <Widget> [
+      Text(date.day.toString()),
+      Text('${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}'),
+      Text('Shift On Progress'),
+    ] :  
+    <Widget> [
+      Text(date.day.toString()),
+      Text('${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}'),
+      Text('${endTime.hour.toString().padLeft(2,'0')}:${endTime.minute.toString().padLeft(2, '0')}'),
+      Text(shift.income.toStringAsFixed(2)),
+    ];
+  }
+  
+  void _modifyShift(Shift shift) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Modify Shift'),
+          content: Column(
+            children: <Widget>[
+              Text('Start Time'),
+              InkWell(
+                
+              ),
+            ],
+          ),
+        );
+      }
+    );
+    setState(() {
+      _started = _started;
+    });
+  }
+
+  void _deleteShift(Shift shift) async {
+    await helper.delete(shift.id);
+    setState(() {
+      _started = _started;
+    });
   }
 
   Future<void> _getIncome() async {
@@ -286,11 +329,14 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
   Future<bool> _auth() async {
     var localAuth = LocalAuthentication();
     bool didAuth = false;
-    try {
+    List<BiometricType> availBiometrics = await localAuth.getAvailableBiometrics();
+    if (availBiometrics.length > 0) {
+      try {
       didAuth = await localAuth.authenticateWithBiometrics(
         localizedReason: _started ? 'To Stop your Shift' : 'To Start your shift',
       );
-    } catch (e) {}
+      } catch (e) {}
+    }
     return didAuth;
   }
   
@@ -300,7 +346,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Confirmation'),
-          content: Text('Are you sure you want to delete your shift?'),
+          content: Text('Are you sure you want to delete your shifts?'),
           actions: <Widget>[
             FlatButton(
               child: Text('CLEAR!'),
@@ -347,16 +393,21 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
               title: Text('Add Shift'),
               onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => AddManualShift(helper: helper)));}
           ),
-          ListTile(
+          ExpansionTile(
+            title: Text('Settings'),
+            children: <Widget> [
+              ListTile(
               title: Text('Set salary per hour'),
               onTap: _setSalaryPerHourDialog,
+              ),
+              ListTile(
+                  title: Text('Clear all shifts'),
+                  onTap: _clearDB,
+              ),
+            ]
           ),
           ListTile(
-              title: Text('Clear all shifts'),
-              onTap: _clearDB,
-          ),
-          ListTile(
-              title: Text('SignOut'),
+              title: Text('Signout'),
               onTap: _signOut,
           )
         ]
