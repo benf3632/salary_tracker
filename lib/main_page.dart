@@ -268,8 +268,8 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
     ];
   }
   
-  void _modifyShift(Shift shift) {
-    showDialog(
+  void _modifyShift(Shift shift) async {
+    await showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -291,7 +291,28 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
   }
 
   void _deleteShift(Shift shift) async {
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: Text('Confirmation'),
+        content: Text('Are you sure you want to delete this shift?'),
+        actions: <Widget>[
+          FlatButton(
+            child: Text('Delete!'),
+            onPressed: () async {
     await helper.delete(shift.id);
+              Navigator.pop(context);
+            },
+          ),
+          FlatButton(
+            child: Text('Cancel'),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      )
+    );
     setState(() {
       _started = _started;
     });
@@ -341,7 +362,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
   }
   
   void _clearDB() async {
-    showDialog(
+    await showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -354,11 +375,13 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
                 await helper.clear();
                 setState(() {_started = false;});
                 Navigator.of(context).pop();
+                Navigator.of(context).pop();
               }
             ),
             FlatButton(
               child: Text('CANCEL'),
               onPressed: () {
+                  Navigator.of(context).pop();
                   Navigator.of(context).pop();
               }
             ),
@@ -366,6 +389,9 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
         );
       }
     );
+    setState(() {
+      _started = _started;
+    });
   }
 
   Widget _buildDrawer(BuildContext context) {
