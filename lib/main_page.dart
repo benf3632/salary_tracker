@@ -271,11 +271,12 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
   }
   
   void _modifyShift(Shift shift) async {
-    final DateTime currentStartTime = DateTime.fromMicrosecondsSinceEpoch(shift.startTime);
-    final DateTime currentEndTime = DateTime.fromMicrosecondsSinceEpoch(shift.endTime);
-    DateTime startTime = currentStartTime;
-    print(startTime);
-    DateTime endTime = currentEndTime;
+    DateTime startTime = DateTime.fromMicrosecondsSinceEpoch(shift.startTime);
+    DateTime endTime = DateTime.fromMicrosecondsSinceEpoch(shift.endTime);
+    TextEditingController wageTEController = TextEditingController();
+    TextEditingController periodTEController = TextEditingController();
+    double currentWage = 0;
+    double currentPeriod = 0;
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -362,8 +363,14 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
                               labelText: 'Wage',
                               border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(40.0))),
                           ),
+                          controller: wageTEController,
                           onChanged: (wage) {
-                              
+                            double temp = double.tryParse(wage);
+                            if (temp == null) {
+                              wageTEController.text = '';
+                            } else {
+                              currentWage = temp;
+                            }
                           },
                         ),
                         decoration: BoxDecoration(
@@ -377,8 +384,14 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
                               labelText: 'Period',
                               border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(40.0))),
                           ),
-                          onChanged: (wage) {
-                              
+                          controller: periodTEController,
+                          onChanged: (period) {
+                            double temp = double.tryParse(period);
+                            if (temp == null) {
+                              wageTEController.text = '';
+                            } else {
+                              currentPeriod = temp;
+                            }
                           },
                         ),
                         decoration: BoxDecoration(
@@ -393,7 +406,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
                   alignment: Alignment.center,
                   child: FlatButton(
                     child: Text('Update'),
-                    onPressed: () {},
+                    onPressed: () => _updateShift(shift, startTime, endTime, currentWage, currentPeriod)
                   ),
                 ),
               ],
@@ -405,6 +418,26 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
     setState(() {
       _started = _started;
     });
+  }
+
+  void _updateShift(Shift shift, DateTime startTime, DateTime endTime, double wage, double period) async {
+    var st = startTime.microsecondsSinceEpoch;
+    var et = endTime.microsecondsSinceEpoch;
+    shift.startTime = st;
+    shift.endTime = et;
+    var hw = (et - st) / 1000000;
+    hw /= 3600;
+    hw -= (period / 60);
+    if (wage == 0) {
+      wage = salaryPerHour;
+    }
+    var income = hw * wage;
+    shift.income = income;
+    await helper.update(shift);
+    setState(() {
+      salaryPerHour = salaryPerHour;
+    });
+    Navigator.pop(context);
   }
 
   void _deleteShift(Shift shift) async {
@@ -506,9 +539,6 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
         );
       }
     );
-    setState(() {
-      _started = _started;
-    });
   }
 
   Widget _buildDrawer(BuildContext context) {
