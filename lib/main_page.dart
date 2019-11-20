@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:local_auth/local_auth.dart';
 import 'dart:async';
@@ -6,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'database_helper_firestore.dart';
 import 'add_manual_shift_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 import 'dart:core';
 import 'sign_in.dart';
 import 'login_page.dart';
@@ -269,22 +271,137 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
   }
   
   void _modifyShift(Shift shift) async {
-    await showDialog(
+    final DateTime currentStartTime = DateTime.fromMicrosecondsSinceEpoch(shift.startTime);
+    final DateTime currentEndTime = DateTime.fromMicrosecondsSinceEpoch(shift.endTime);
+    DateTime startTime = currentStartTime;
+    print(startTime);
+    DateTime endTime = currentEndTime;
+    showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Modify Shift'),
-          content: Column(
-            children: <Widget>[
-              Text('Start Time'),
-              InkWell(
-                
-              ),
-            ],
-          ),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return SimpleDialog(
+              title: Text('Modify Shift'),
+              children: <Widget>[
+                Align(
+                  alignment: Alignment.center,
+                  child: Text('Start Time'),
+                ),
+                InkWell(
+                  child: Container(
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(40.0)),
+                      ),
+                      width: 300,
+                      height: 50,
+                      child: Container(
+                          child: Text('${startTime != null ? DateFormat('yyyy-MM-dd kk:mm:ss').format(startTime) : ''}'),
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.only(bottom: 10),
+                      ),
+                      margin: const EdgeInsets.only(right: 20, left: 20),
+                      padding: const EdgeInsets.only(top: 20),
+                  ),
+                  onTap: () {
+                    DatePicker.showDateTimePicker(context,
+                      showTitleActions: true,
+                      currentTime: startTime,
+                      onChanged: (date) {
+                        setState(() {
+                          startTime = date;
+                        });                      
+                      }
+                    );
+                  },
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top: 10),
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Text('End Time'),
+                  ), 
+                ),
+                InkWell(
+                  child: Container(
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(40.0)),
+                      ),
+                      width: 300,
+                      height: 50,
+                      child: Container(
+                          child: Text('${endTime != null ? DateFormat('yyyy-MM-dd kk:mm:ss').format(endTime) : ''}'),
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.only(bottom: 10),
+                      ),
+                      margin: const EdgeInsets.only(right: 20, left: 20),
+                      padding: const EdgeInsets.only(top: 20),
+                  ),
+                  onTap: () {
+                    DatePicker.showDateTimePicker(context,
+                      showTitleActions: true,
+                      currentTime: startTime,
+                      onChanged: (date) {
+                        setState(() {
+                          endTime = date;
+                        });                      
+                      }
+                    );
+                  },
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: <Widget>[
+                      Container(
+                        child: TextField(
+                          decoration: InputDecoration(
+                              labelText: 'Wage',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(40.0))),
+                          ),
+                          onChanged: (wage) {
+                              
+                          },
+                        ),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(40.0))
+                        ),
+                        width: 100
+                      ),
+                      Container(
+                        child: TextField(
+                          decoration: InputDecoration(
+                              labelText: 'Period',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(40.0))),
+                          ),
+                          onChanged: (wage) {
+                              
+                          },
+                        ),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(40.0))
+                        ),
+                        width: 100
+                      ),
+                    ],
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.center,
+                  child: FlatButton(
+                    child: Text('Update'),
+                    onPressed: () {},
+                  ),
+                ),
+              ],
+            );
+          }
         );
-      }
-    );
+      },
+    );          
     setState(() {
       _started = _started;
     });
