@@ -48,6 +48,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
     _controller = ScrollController();
     selectedMonth = DateTime.now().month - 1;
     currentYear = DateTime.now().year;
+    _currentStart = 2;
     _getIncome();
     _read();
     _signed = widget.signMethod;
@@ -229,7 +230,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
             height: 50.0,
             color: color,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: <Widget>[..._rowShift(shift),]
             ),
           ),
