@@ -82,7 +82,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.inactive:
       case AppLifecycleState.paused:
-      case AppLifecycleState.suspending:
+      case AppLifecycleState.detached:
         _save();
         break;
       case AppLifecycleState.resumed:
