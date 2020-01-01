@@ -113,3 +113,4 @@ coverage/
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 
 build\\ios/
+.flutter-plugins-dependencies
