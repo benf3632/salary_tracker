@@ -32,6 +32,8 @@ dependencies:
   wave: ^0.0.8
   flutter_slidable: ^0.5.4
   intl: ^0.15.7
+  flutter_local_notifications: ^0.9.1+1
+  rxdart: ^0.23.1
 
 dev_dependencies:
   flutter_test:

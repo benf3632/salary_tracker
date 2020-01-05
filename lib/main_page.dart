@@ -1,16 +1,34 @@
+import 'dart:core';
+import 'dart:async';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:local_auth/local_auth.dart';
-import 'dart:async';
+import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'database_helper_firestore.dart';
 import 'add_manual_shift_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
-import 'dart:core';
 import 'sign_in.dart';
 import 'login_page.dart';
+
+class ReceivedNotification {
+    final int id;
+    final String title;
+    final String body;
+    final String payload;
+
+    ReceivedNotification(
+        {@required this.id,
+        @required this.title,
+        @required this.body,
+        @required this.payload});
+  }
 
 class MainPage extends StatefulWidget {
   final FirebaseUser user;
@@ -38,9 +56,40 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
   ScrollController _controller;
   double _currentStart = -1;
 
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+// Streams are created so that app can respond to notification-related events since the plugin is initialised in the `main` function
+  final BehaviorSubject<ReceivedNotification> didReceiveLocalNotificationSubject = BehaviorSubject<ReceivedNotification>();
+
+  final BehaviorSubject<String> selectNotificationSubject = BehaviorSubject<String>();
+  
   @override
   void initState() {
     super.initState();
+
+    // init notification
+    var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
+    var initializationSettingsIOS = IOSInitializationSettings(
+        onDidReceiveLocalNotification:
+            (int id, String title, String body, String payload) async {
+      didReceiveLocalNotificationSubject.add(ReceivedNotification(
+          id: id, title: title, body: body, payload: payload));
+    });
+    var initializationSettings = InitializationSettings(
+        initializationSettingsAndroid, initializationSettingsIOS);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings,
+    onSelectNotification: (String payload) async {
+      if (payload != null) {
+        debugPrint('notification payload: ' + payload);
+      }
+      selectNotificationSubject.add(payload);
+      });
+
+    didReceiveLocalNotificationSubject.stream.listen((ReceivedNotification recivedNotification) async {});
+    selectNotificationSubject.stream.listen((String payload) async {
+      debugPrint('Payload $payload');
+    });
+
     WidgetsBinding.instance.addObserver(this);
     _user = widget.user;
     String userUid = _user.uid;
@@ -57,6 +106,8 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    didReceiveLocalNotificationSubject.close();
+    selectNotificationSubject.close();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -494,8 +545,28 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
         currentShiftId = id;
       }
       await _getIncome();
-      setState(() {_started = !_started; });
+      setState(() {_started = !_started;});
+      _showNotification();
     }
+  }
+
+  Future<void> _showNotification() async {
+    var vib = Int64List(2);
+    vib[0] = 0;
+    vib[1] = 0;
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'nvib', 'novibration', 'notfi without vibration',
+      importance: Importance.Max, priority: Priority.High, ticker: 'ticker', enableVibration: true, vibrationPattern: vib);
+    var iOSplatformChannelSpecific = IOSNotificationDetails(presentAlert: true);
+    var platformChannelSpecific = NotificationDetails(androidPlatformChannelSpecifics, iOSplatformChannelSpecific);
+    while (_started) {
+      await flutterLocalNotificationsPlugin.show(0, 'Shift Started', 'To Stop Click Here', platformChannelSpecific);
+    }
+    await _cancelNotification();
+  }
+
+  Future<void> _cancelNotification() async {
+    await flutterLocalNotificationsPlugin.cancelAll();
   }
 
   Future<bool> _auth() async {
