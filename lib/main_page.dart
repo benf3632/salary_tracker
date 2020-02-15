@@ -329,6 +329,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
     TextEditingController periodTEController = TextEditingController();
     double currentWage = 0;
     double currentPeriod = 0;
+    bool fiftyPrecent = false;
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -454,11 +455,24 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
                     ],
                   ),
                 ),
+                Row(
+                  //crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text('150%'),
+                    Checkbox(
+                      value: fiftyPrecent,
+                      onChanged: (bool val) {
+                        setState((){fiftyPrecent = val;});
+                      },
+                    ),
+                  ],
+                ),
                 Align(
                   alignment: Alignment.center,
                   child: FlatButton(
                     child: Text('Update'),
-                    onPressed: () => _updateShift(shift, startTime, endTime, currentWage, currentPeriod)
+                    onPressed: () => _updateShift(shift, startTime, endTime, currentWage, currentPeriod, fiftyPrecent)
                   ),
                 ),
               ],
@@ -472,7 +486,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
     });
   }
 
-  void _updateShift(Shift shift, DateTime startTime, DateTime endTime, double wage, double period) async {
+  void _updateShift(Shift shift, DateTime startTime, DateTime endTime, double wage, double period, bool fiftyPrecent) async {
     var st = startTime.microsecondsSinceEpoch;
     var et = endTime.microsecondsSinceEpoch;
     shift.startTime = st;
@@ -483,7 +497,7 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
     if (wage == 0) {
       wage = salaryPerHour;
     }
-    var income = hw * wage;
+    var income = hw * (fiftyPrecent ? wage * 1.5 : wage);
     shift.income = income;
     await helper.update(shift);
     setState(() {
