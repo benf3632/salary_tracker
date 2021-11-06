@@ -586,17 +586,18 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
         var income = hoursWorked * salaryPerHour;
         shift.income = income;
         helper.update(shift);
+        _cancelNotification();
       } else {
         DateTime time = DateTime.now();
         Shift shift = Shift(time.microsecondsSinceEpoch, 0, time.toString(), 0);
         String id = await helper.insert(shift);
         currentShiftId = id;
+        _showNotification();
       }
       await _getIncome();
       setState(() {
         _started = !_started;
       });
-      _showNotification();
     }
   }
 
@@ -616,11 +617,8 @@ class MainPageState extends State<MainPage> with WidgetsBindingObserver {
     var platformChannelSpecific = NotificationDetails(
         android: androidPlatformChannelSpecifics,
         iOS: iOSplatformChannelSpecific);
-    while (_started) {
-      await flutterLocalNotificationsPlugin.show(
-          0, 'Shift Started', 'To Stop Click Here', platformChannelSpecific);
-    }
-    await _cancelNotification();
+    await flutterLocalNotificationsPlugin.show(
+        0, 'Shift Started', 'To Stop Click Here', platformChannelSpecific);
   }
 
   Future<void> _cancelNotification() async {
