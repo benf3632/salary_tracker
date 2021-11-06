@@ -1,4 +1,4 @@
-package com.example.salary_tracker;
+package com.cookies.salary_tracker;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -9,7 +9,7 @@ import android.widget.RemoteViews;
 import android.widget.Toast;
 
 public class ShiftWidgetProvider extends AppWidgetProvider {
-    public static String WIDGET_BUTTON  = "com.example.salary_tracker.WIDGET_BUTTON";
+    public static String WIDGET_BUTTON  = "com.cookies.salary_tracker.WIDGET_BUTTON";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {

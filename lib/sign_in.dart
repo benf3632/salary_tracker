@@ -4,65 +4,56 @@ import 'package:google_sign_in/google_sign_in.dart';
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final GoogleSignIn googleSignIn = GoogleSignIn();
 
-Future<FirebaseUser> signInWithGoogle() async {
-    final GoogleSignInAccount  googleSignInAccount = await googleSignIn.signIn();
-    if (googleSignInAccount != null) {
-      final GoogleSignInAuthentication googleSignInAuthentication = 
-              await googleSignInAccount.authentication;
+Future<User> signInWithGoogle() async {
+  final GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
+  if (googleSignInAccount != null) {
+    final GoogleSignInAuthentication googleSignInAuthentication =
+        await googleSignInAccount.authentication;
 
-      final AuthCredential credential = GoogleAuthProvider.getCredential(
-          accessToken: googleSignInAuthentication.accessToken,
-          idToken: googleSignInAuthentication.idToken,
-      );
+    final GoogleAuthCredential credential = GoogleAuthProvider.credential(
+      accessToken: googleSignInAuthentication.accessToken,
+      idToken: googleSignInAuthentication.idToken,
+    );
 
-      await _auth.signInWithCredential(credential);
-
-
-      final FirebaseUser currentUser = await _auth.currentUser();
-      
-      
-      return currentUser;
-    }
-    return null;
+    await _auth.signInWithCredential(credential);
+    return _auth.currentUser;
+  }
+  return null;
 }
 
 void signOutGoogle() async {
-    await googleSignIn.signOut();
-    print('User Sign Out');
+  await googleSignIn.signOut();
+  print('User Sign Out');
 }
 
-Future<FirebaseUser> signSilentGoogle() async {
-   final GoogleSignInAccount googleAcc = await googleSignIn.signInSilently();
-   if (googleAcc != null) {
-      final GoogleSignInAuthentication googleSignInAuthentication = 
-          await googleAcc.authentication;
-      
-      final AuthCredential credential = GoogleAuthProvider.getCredential(
-          accessToken: googleSignInAuthentication.accessToken,
-          idToken: googleSignInAuthentication.idToken,
-      );
+Future<User> signSilentGoogle() async {
+  final GoogleSignInAccount googleAcc = await googleSignIn.signInSilently();
+  if (googleAcc != null) {
+    final GoogleSignInAuthentication googleSignInAuthentication =
+        await googleAcc.authentication;
 
-      await _auth.signInWithCredential(credential);
+    final GoogleAuthCredential credential = GoogleAuthProvider.credential(
+      accessToken: googleSignInAuthentication.accessToken,
+      idToken: googleSignInAuthentication.idToken,
+    );
 
-      final FirebaseUser currentUser = await _auth.currentUser();
-
-      return currentUser;
-
-   }
-   return null;
+    await _auth.signInWithCredential(credential);
+    return _auth.currentUser;
+  }
+  return null;
 }
 
 Future<dynamic> signIn(String email, String password) async {
   try {
-    AuthResult result = await _auth.signInWithEmailAndPassword(
-    email: email, password: password,
-    );
-    FirebaseUser user = result.user;
-    if (user != null && user.isEmailVerified) {
+    User user = (await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    ))
+        .user;
+    if (user != null && user.emailVerified) {
       return user;
     }
-  }
-  catch (e) {
+  } catch (e) {
     return e;
   }
   return 'Please verify you email address';
@@ -70,15 +61,15 @@ Future<dynamic> signIn(String email, String password) async {
 
 Future<dynamic> signUp(String email, String password) async {
   try {
-    AuthResult result = await _auth.createUserWithEmailAndPassword(
-    email: email, password: password,
+    UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
     );
-    FirebaseUser user = result.user;
+    User user = userCredential.user;
     try {
       await user.sendEmailVerification();
       return user;
-    }
-    catch (e) {
+    } catch (e) {
       print(e.toString());
       return e;
     }
@@ -91,14 +82,13 @@ Future<dynamic> forgotPassword(String email) async {
   try {
     await _auth.sendPasswordResetEmail(email: email);
     return true;
-  }
-  catch (e) {
+  } catch (e) {
     return e;
   }
 }
 
-Future<FirebaseUser> getCurrentUser() async {
-  return await _auth.currentUser();
+User getCurrentUser() {
+  return _auth.currentUser;
 }
 
 Future<void> signOut() async {
